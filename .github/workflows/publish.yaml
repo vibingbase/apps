@@ -3,12 +3,16 @@ name: Publish
 on:
   workflow_dispatch:
     inputs:
-      vibingbase-download-server:
-        type: choice
-        options: [local, remote]
-        required: true
       vibingbase-download-url:
         type: string
+        required: true
+      vibingbase-download-server:
+        type: choice
+        options: [origin, proxy]
+        required: true
+      vibingbase-app-env:
+        type: choice
+        options: [development, production]
         required: true
       vibingbase-app-id:
         type: string
@@ -24,9 +28,13 @@ jobs:
         platform: [macos-latest, windows-latest]
     name: ${{ github.workflow }} ${{ inputs.vibingbase-app-id }} (${{ matrix.platform }})
     runs-on: ${{ matrix.platform }}
+    permissions:
+      contents: write
     steps:
       - name: Mask sensitive values
-        run: echo "::add-mask::${{ inputs.vibingbase-download-url }}"
+        run: echo "::add-mask::$VIBINGBASE_DOWNLOAD_URL"
+        env:
+          VIBINGBASE_DOWNLOAD_URL: ${{ inputs.vibingbase-download-url }}
       - uses: actions/checkout@v4
       - uses: fregante/setup-git-user@v2
       - uses: pnpm/action-setup@v4
@@ -37,9 +45,11 @@ jobs:
       - run: pnpm install
       - run: node setup-app.js
         env:
-          VIBINGBASE_LOCAL_PROXY_SECRET: ${{ secrets.LOCAL_PROXY_SECRET }}
+          VIBINGBASE_PROXY_DEVELOPMENT_SECRET: ${{ secrets.PROXY_DEVELOPMENT_SECRET }}
+          VIBINGBASE_PROXY_PRODUCTION_SECRET: ${{ secrets.PROXY_PRODUCTION_SECRET }}
           VIBINGBASE_DOWNLOAD_SERVER: ${{ inputs.vibingbase-download-server }}
           VIBINGBASE_DOWNLOAD_URL: ${{ inputs.vibingbase-download-url }}
+          VIBINGBASE_APP_ENV: ${{ inputs.vibingbase-app-env }}
           VIBINGBASE_APP_ID: ${{ inputs.vibingbase-app-id }}
           VIBINGBASE_APP_DIR: ${{ runner.temp }}/${{ inputs.vibingbase-app-id }}
       - run: pnpm install
@@ -77,8 +87,8 @@ jobs:
           args: ${{ runner.os == 'macOS' && '--target universal-apple-darwin' || '' }} --config src-tauri/tauri.release.conf.json
           tauriScript: pnpm exec tauri
           projectPath: ${{ runner.temp }}/${{ inputs.vibingbase-app-id }}
-          tagName: ${{ inputs.vibingbase-download-server }}_${{ inputs.vibingbase-app-id }}@v__VERSION__
-          releaseName: ${{ inputs.vibingbase-download-server }}_${{ inputs.vibingbase-app-id }}@v__VERSION__
+          tagName: ${{ inputs.vibingbase-app-env }}-${{ inputs.vibingbase-app-id }}@v__VERSION__
+          releaseName: ${{ inputs.vibingbase-app-env }}-${{ inputs.vibingbase-app-id }}@v__VERSION__
           includeUpdaterJson: false
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}

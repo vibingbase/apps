@@ -4,14 +4,19 @@ import { Extract } from "unzipper";
 
 const headers = new Headers();
 
-if (
-  process.env.VIBINGBASE_DOWNLOAD_SERVER === "local" &&
-  process.env.VIBINGBASE_LOCAL_PROXY_SECRET
-) {
-  headers.set(
-    "authorization",
-    `Bearer ${process.env.VIBINGBASE_LOCAL_PROXY_SECRET}`,
-  );
+if (process.env.VIBINGBASE_DOWNLOAD_SERVER === "proxy") {
+  let secret;
+  switch (process.env.VIBINGBASE_APP_ENV) {
+    case "development":
+      secret = process.env.VIBINGBASE_PROXY_DEVELOPMENT_SECRET;
+      break;
+    case "production":
+      secret = process.env.VIBINGBASE_PROXY_PRODUCTION_SECRET;
+      break;
+  }
+  if (secret) {
+    headers.set("authorization", `Bearer ${secret}`);
+  }
 }
 
 const response = await fetch(process.env.VIBINGBASE_DOWNLOAD_URL, { headers });
