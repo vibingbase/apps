@@ -1,0 +1,46 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      vibingbase-download-source:
+        type: choice
+        options: [local, remote]
+        required: true
+      vibingbase-download-url:
+        type: string
+        required: true
+      vibingbase-app-id:
+        type: string
+        required: true
+
+concurrency:
+  group: ${{ github.workflow }} ${{ inputs.vibingbase-app-id }}
+
+jobs:
+  publish:
+    strategy:
+      matrix:
+        platform: [macos-latest, windows-latest]
+    name: ${{ github.workflow }} ${{ inputs.vibingbase-app-id }} (${{ matrix.platform }})
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: fregante/setup-git-user@v2
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          cache: pnpm
+          node-version-file: .nvmrc
+      - run: pnpm install
+      - run: node setup-app.js
+        env:
+          VIBINGBASE_LOCAL_PROXY_TOKEN: ${{ secrets.LOCAL_PROXY_TOKEN }}
+          VIBINGBASE_DOWNLOAD_SOURCE: ${{ inputs.vibingbase-download-source }}
+          VIBINGBASE_DOWNLOAD_URL: ${{ inputs.vibingbase-download-url }}
+          VIBINGBASE_APP_ID: ${{ inputs.vibingbase-app-id }}
+          VIBINGBASE_APP_DIR: ${{ runner.temp }}/${{ inputs.vibingbase-app-id }}
+      - uses: jaywcjlove/github-action-folder-tree@v1.2.0
+        with:
+          path: ${{ runner.temp }}/${{ inputs.vibingbase-app-id }}
+          exclude: .git|.DS_Store|node_modules
