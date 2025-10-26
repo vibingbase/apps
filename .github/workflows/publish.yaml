@@ -31,10 +31,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Mask sensitive values
-        run: echo "::add-mask::$VIBINGBASE_DOWNLOAD_URL"
-        env:
-          VIBINGBASE_DOWNLOAD_URL: ${{ inputs.vibingbase-download-url }}
+      - uses: levibostian/action-hide-sensitive-inputs@v1
       - uses: actions/checkout@v4
       - uses: fregante/setup-git-user@v2
       - uses: pnpm/action-setup@v4
@@ -103,4 +100,5 @@ jobs:
           AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: rm -rf ${{ runner.temp }}/${{ inputs.vibingbase-app-id }}/src-tauri/target${{ runner.os == 'macOS' && '/universal-apple-darwin/' || '/' }}release/bundle
+      - shell: bash
+        run: rm -rf ${{ runner.temp }}/${{ inputs.vibingbase-app-id }}/src-tauri/target${{ runner.os == 'macOS' && '/universal-apple-darwin/' || '/' }}release/bundle
