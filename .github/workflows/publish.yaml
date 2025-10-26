@@ -19,19 +19,21 @@ on:
         required: true
 
 concurrency:
-  group: ${{ github.workflow }} ${{ inputs.vibingbase-app-id }}
+  group: ${{ github.workflow }} ${{ inputs.vibingbase-app-env }}-${{ inputs.vibingbase-app-id }}
 
 jobs:
   publish:
     strategy:
       matrix:
         platform: [macos-latest, windows-latest]
-    name: ${{ github.workflow }} ${{ inputs.vibingbase-app-id }} (${{ matrix.platform }})
+    name: ${{ github.workflow }} ${{ inputs.vibingbase-app-env }}-${{ inputs.vibingbase-app-id }} (${{ matrix.platform }})
     runs-on: ${{ matrix.platform }}
     permissions:
       contents: write
     steps:
       - uses: levibostian/action-hide-sensitive-inputs@v1
+        with:
+          exclude_inputs: vibingbase-app-env,vibingbase-app-id
       - uses: actions/checkout@v4
       - uses: fregante/setup-git-user@v2
       - uses: pnpm/action-setup@v4
@@ -86,6 +88,11 @@ jobs:
           projectPath: ${{ runner.temp }}/${{ inputs.vibingbase-app-id }}
           tagName: ${{ inputs.vibingbase-app-env }}-${{ inputs.vibingbase-app-id }}@v__VERSION__
           releaseName: ${{ inputs.vibingbase-app-env }}-${{ inputs.vibingbase-app-id }}@v__VERSION__
+          releaseBody: |
+            **App ID**: `${{ inputs.vibingbase-app-id }}`
+            **App Version**: `__VERSION__`
+            **App Environment**: `${{ inputs.vibingbase-app-env }}`
+            (Built with [Vibingbase](https://www.vibingbase.com))
           includeUpdaterJson: false
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
