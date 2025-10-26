@@ -78,6 +78,7 @@ jobs:
           tauriScript: pnpm exec tauri
           projectPath: ${{ runner.temp }}/${{ inputs.vibingbase-app-id }}
           tagName: ${{ inputs.vibingbase-download-server }}_${{ inputs.vibingbase-app-id }}@v__VERSION__
+          releaseName: ${{ inputs.vibingbase-download-server }}_${{ inputs.vibingbase-app-id }}@v__VERSION__
           includeUpdaterJson: false
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
