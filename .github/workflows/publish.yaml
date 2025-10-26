@@ -3,7 +3,7 @@ name: Publish
 on:
   workflow_dispatch:
     inputs:
-      vibingbase-download-source:
+      vibingbase-download-server:
         type: choice
         options: [local, remote]
         required: true
@@ -35,8 +35,8 @@ jobs:
       - run: pnpm install
       - run: node setup-app.js
         env:
-          VIBINGBASE_LOCAL_PROXY_TOKEN: ${{ secrets.LOCAL_PROXY_TOKEN }}
-          VIBINGBASE_DOWNLOAD_SOURCE: ${{ inputs.vibingbase-download-source }}
+          VIBINGBASE_LOCAL_PROXY_SECRET: ${{ secrets.LOCAL_PROXY_SECRET }}
+          VIBINGBASE_DOWNLOAD_SERVER: ${{ inputs.vibingbase-download-server }}
           VIBINGBASE_DOWNLOAD_URL: ${{ inputs.vibingbase-download-url }}
           VIBINGBASE_APP_ID: ${{ inputs.vibingbase-app-id }}
           VIBINGBASE_APP_DIR: ${{ runner.temp }}/${{ inputs.vibingbase-app-id }}

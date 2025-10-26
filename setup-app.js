@@ -5,12 +5,12 @@ import { Extract } from "unzipper";
 const headers = new Headers();
 
 if (
-  process.env.VIBINGBASE_DOWNLOAD_SOURCE === "local" &&
-  process.env.VIBINGBASE_LOCAL_PROXY_TOKEN
+  process.env.VIBINGBASE_DOWNLOAD_SERVER === "local" &&
+  process.env.VIBINGBASE_LOCAL_PROXY_SECRET
 ) {
   headers.set(
     "authorization",
-    `Bearer ${process.env.VIBINGBASE_LOCAL_PROXY_TOKEN}`,
+    `Bearer ${process.env.VIBINGBASE_LOCAL_PROXY_SECRET}`,
   );
 }
 
