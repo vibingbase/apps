@@ -33,15 +33,28 @@ jobs:
       version: ${{ steps.tauri.outputs.appVersion }}
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-workflow
+      - uses: ./.github/actions/make-request
+        with:
+          development-secret: ${{ secrets.VIBINGBASE_DEVELOPMENT_SECRET }}
+          production-secret: ${{ secrets.VIBINGBASE_PRODUCTION_SECRET }}
+          app-env: ${{ inputs.vibingbase-app-env }}
+          app-id: ${{ inputs.vibingbase-app-id }}
+          request-url: ${{ inputs.vibingbase-request-url }}
+          request-action: pre-publish
+          request-body: |
+            {
+              "type": "gha",
+              "id": ${{ github.run_id }},
+              "attempt": ${{ github.run_attempt }}
+            }
       - uses: ./.github/actions/setup-workspace
       - run: node setup-app.js
         env:
           VIBINGBASE_DEVELOPMENT_SECRET: ${{ secrets.VIBINGBASE_DEVELOPMENT_SECRET }}
           VIBINGBASE_PRODUCTION_SECRET: ${{ secrets.VIBINGBASE_PRODUCTION_SECRET }}
           VIBINGBASE_APP_ENV: ${{ inputs.vibingbase-app-env }}
-          VIBINGBASE_APP_ID: ${{ inputs.vibingbase-app-id }}
           VIBINGBASE_APP_DIR: ${{ runner.temp }}/${{ inputs.vibingbase-app-id }}
-          VIBINGBASE_REQUEST_URL: ${{ inputs.vibingbase-request-url }}
           VIBINGBASE_DOWNLOAD_URL: ${{ inputs.vibingbase-download-url }}
       - run: pnpm install
         working-directory: ${{ runner.temp }}/${{ inputs.vibingbase-app-id }}
