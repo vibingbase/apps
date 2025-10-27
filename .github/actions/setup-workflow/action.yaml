@@ -1,0 +1,9 @@
+name: Setup workflow
+description: Prepare environment and configuration
+runs:
+  using: composite
+  steps:
+    - uses: levibostian/action-hide-sensitive-inputs@v1
+      with:
+        exclude_inputs: vibingbase-app-env,vibingbase-app-id
+    - uses: fregante/setup-git-user@v2

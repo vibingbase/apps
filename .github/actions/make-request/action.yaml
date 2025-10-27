@@ -1,0 +1,39 @@
+name: Make request
+description: Make an API request to Vibingbase
+inputs:
+  development-secret:
+    description: The development secret
+    required: true
+  production-secret:
+    description: The production secret
+    required: true
+  app-env:
+    description: The app environment (development, production)
+    required: true
+  app-id:
+    description: The app ID
+    required: true
+  request-url:
+    description: The request base URL
+    required: true
+  request-action:
+    description: The request action (pre-publish, post-publish, etc.)
+    required: true
+  request-body:
+    description: The request body (application/json)
+    required: true
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        HTTP_CODE=$(curl -X 'POST' \
+          '${{ inputs.request-url }}/v1/app/${{ inputs.app-id }}/${{ inputs.request-action }}' \
+          -H 'content-type: application/json' \
+          -H 'authorization: Bearer ${{ inputs.app-env == 'production' && inputs.production-secret || inputs.development-secret }}' \
+          -d '${{ inputs.request-body }}' \
+          -s -w "%{http_code}" -o /dev/null)
+        if [ "$HTTP_CODE" != "200" ]; then
+          echo "Failed to make request: ${{ inputs.request-action }} ($HTTP_CODE)"
+          exit 1
+        fi

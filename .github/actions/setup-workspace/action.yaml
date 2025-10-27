@@ -1,0 +1,13 @@
+name: Setup workspace
+description: Install dependencies and tools
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/setup-workflow
+    - uses: pnpm/action-setup@v4
+    - uses: actions/setup-node@v4
+      with:
+        cache: pnpm
+        node-version-file: .nvmrc
+    - shell: bash
+      run: pnpm install
