@@ -21,16 +21,9 @@ concurrency:
   group: ${{ github.workflow }} ${{ inputs.vibingbase-app-env }}-${{ inputs.vibingbase-app-id }}
 
 jobs:
-  publish:
-    strategy:
-      matrix:
-        platform: [macos-latest, windows-latest]
-    name: ${{ github.workflow }} ${{ inputs.vibingbase-app-env }}-${{ inputs.vibingbase-app-id }} (${{ matrix.platform }})
-    runs-on: ${{ matrix.platform }}
-    permissions:
-      contents: write
-    outputs:
-      version: ${{ steps.tauri.outputs.appVersion }}
+  pre-publish:
+    name: Pre-publish ${{ inputs.vibingbase-app-env }}-${{ inputs.vibingbase-app-id }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-workflow
@@ -48,6 +41,19 @@ jobs:
               "id": ${{ github.run_id }},
               "attempt": ${{ github.run_attempt }}
             }
+  publish:
+    strategy:
+      matrix:
+        platform: [macos-latest, windows-latest]
+    name: ${{ github.workflow }} ${{ inputs.vibingbase-app-env }}-${{ inputs.vibingbase-app-id }} (${{ matrix.platform }})
+    runs-on: ${{ matrix.platform }}
+    needs: [pre-publish]
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.tauri.outputs.appVersion }}
+    steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-workspace
       - run: node setup-app.js
         env:
@@ -115,10 +121,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - shell: bash
         run: rm -rf ${{ runner.temp }}/${{ inputs.vibingbase-app-id }}/src-tauri/target${{ runner.os == 'macOS' && '/universal-apple-darwin/' || '/' }}release/bundle
-  finalize:
-    name: Finalize ${{ inputs.vibingbase-app-env }}-${{ inputs.vibingbase-app-id }}
-    needs: [publish]
+  post-publish:
+    name: Post-publish ${{ inputs.vibingbase-app-env }}-${{ inputs.vibingbase-app-id }}
     runs-on: ubuntu-latest
+    needs: [publish]
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-workflow
