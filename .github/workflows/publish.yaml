@@ -3,18 +3,17 @@ name: Publish
 on:
   workflow_dispatch:
     inputs:
-      vibingbase-download-url:
-        type: string
-        required: true
-      vibingbase-download-server:
-        type: choice
-        options: [origin, proxy]
-        required: true
       vibingbase-app-env:
         type: choice
         options: [development, production]
         required: true
       vibingbase-app-id:
+        type: string
+        required: true
+      vibingbase-request-url:
+        type: string
+        required: true
+      vibingbase-download-url:
         type: string
         required: true
 
@@ -30,6 +29,8 @@ jobs:
     runs-on: ${{ matrix.platform }}
     permissions:
       contents: write
+    outputs:
+      version: ${{ steps.tauri.outputs.appVersion }}
     steps:
       - uses: levibostian/action-hide-sensitive-inputs@v1
         with:
@@ -44,13 +45,13 @@ jobs:
       - run: pnpm install
       - run: node setup-app.js
         env:
-          VIBINGBASE_PROXY_DEVELOPMENT_SECRET: ${{ secrets.PROXY_DEVELOPMENT_SECRET }}
-          VIBINGBASE_PROXY_PRODUCTION_SECRET: ${{ secrets.PROXY_PRODUCTION_SECRET }}
-          VIBINGBASE_DOWNLOAD_SERVER: ${{ inputs.vibingbase-download-server }}
-          VIBINGBASE_DOWNLOAD_URL: ${{ inputs.vibingbase-download-url }}
           VIBINGBASE_APP_ENV: ${{ inputs.vibingbase-app-env }}
           VIBINGBASE_APP_ID: ${{ inputs.vibingbase-app-id }}
           VIBINGBASE_APP_DIR: ${{ runner.temp }}/${{ inputs.vibingbase-app-id }}
+          VIBINGBASE_REQUEST_URL: ${{ inputs.vibingbase-request-url }}
+          VIBINGBASE_DOWNLOAD_URL: ${{ inputs.vibingbase-download-url }}
+          VIBINGBASE_DEVELOPMENT_SECRET: ${{ secrets.VIBINGBASE_DEVELOPMENT_SECRET }}
+          VIBINGBASE_PRODUCTION_SECRET: ${{ secrets.VIBINGBASE_PRODUCTION_SECRET }}
       - run: pnpm install
         working-directory: ${{ runner.temp }}/${{ inputs.vibingbase-app-id }}
       - uses: dtolnay/rust-toolchain@stable
@@ -81,7 +82,8 @@ jobs:
       - if: runner.os == 'Windows'
         shell: pwsh
         run: Invoke-WebRequest -Uri "https://github.com/Levminer/trusted-signing-cli/releases/download/0.8.0/trusted-signing-cli.exe" -OutFile "$env:windir\trusted-signing-cli.exe"
-      - uses: tauri-apps/tauri-action@v0
+      - id: tauri
+        uses: tauri-apps/tauri-action@v0
         with:
           args: ${{ runner.os == 'macOS' && '--target universal-apple-darwin' || '' }} --config src-tauri/tauri.release.conf.json
           tauriScript: pnpm exec tauri
@@ -109,3 +111,22 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - shell: bash
         run: rm -rf ${{ runner.temp }}/${{ inputs.vibingbase-app-id }}/src-tauri/target${{ runner.os == 'macOS' && '/universal-apple-darwin/' || '/' }}release/bundle
+  finalize:
+    name: Finalize ${{ inputs.vibingbase-app-env }}-${{ inputs.vibingbase-app-id }}
+    needs: [publish]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger ${{ inputs.vibingbase-request-url }}/v1/app/${{ inputs.vibingbase-app-id }}/post-publish
+        run: |
+          HTTP_CODE=$(curl -X 'POST' \
+            '${{ inputs.vibingbase-request-url }}/v1/app/${{ inputs.vibingbase-app-id }}/post-publish' \
+            -H 'content-type: application/json' \
+            -H 'authorization: Bearer ${{ inputs.vibingbase-app-env == 'development' && secrets.VIBINGBASE_DEVELOPMENT_SECRET || secrets.VIBINGBASE_PRODUCTION_SECRET }}' \
+            -d '{
+            "version": "${{ needs.publish.outputs.version }}"
+            }' \
+            -s -w "%{http_code}" -o /dev/null)
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "Failed to post-publish ($HTTP_CODE)"
+            exit 1
+          fi

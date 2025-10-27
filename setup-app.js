@@ -2,29 +2,50 @@ import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { Extract } from "unzipper";
 
-const headers = new Headers();
+const requestHeaders = new Headers();
 
-if (process.env.VIBINGBASE_DOWNLOAD_SERVER === "proxy") {
-  let secret;
-  switch (process.env.VIBINGBASE_APP_ENV) {
-    case "development":
-      secret = process.env.VIBINGBASE_PROXY_DEVELOPMENT_SECRET;
-      break;
-    case "production":
-      secret = process.env.VIBINGBASE_PROXY_PRODUCTION_SECRET;
-      break;
+const downloadHeaders = new Headers();
+
+switch (process.env.VIBINGBASE_APP_ENV) {
+  case "development": {
+    const authorization = `Bearer ${process.env.VIBINGBASE_DEVELOPMENT_SECRET}`;
+    requestHeaders.set("authorization", authorization);
+    downloadHeaders.set("authorization", authorization);
+    break;
   }
-  if (secret) {
-    headers.set("authorization", `Bearer ${secret}`);
+  case "production": {
+    requestHeaders.set(
+      "authorization",
+      `Bearer ${process.env.VIBINGBASE_PRODUCTION_SECRET}`,
+    );
+    break;
   }
 }
 
-const response = await fetch(process.env.VIBINGBASE_DOWNLOAD_URL, { headers });
+const prePublishResponse = await fetch(
+  `${process.env.VIBINGBASE_REQUEST_URL}/v1/app/${process.env.VIBINGBASE_APP_ID}/prepublish`,
+  {
+    headers: requestHeaders,
+    method: "POST",
+    body: JSON.stringify({
+      type: "gha",
+      id: Number(process.env.GITHUB_RUN_ID),
+      attempt: Number(process.env.GITHUB_RUN_ATTEMPT),
+    }),
+  },
+);
 
-if (!response.ok)
-  throw new Error(`Failed to download: HTTP ${response.status}`);
+if (!prePublishResponse.ok)
+  throw new Error(`Failed to pre-publish: HTTP ${prePublishResponse.status}`);
+
+const downloadResponse = await fetch(process.env.VIBINGBASE_DOWNLOAD_URL, {
+  headers: downloadHeaders,
+});
+
+if (!downloadResponse.ok)
+  throw new Error(`Failed to download: HTTP ${downloadResponse.status}`);
 
 await pipeline(
-  Readable.fromWeb(response.body),
+  Readable.fromWeb(downloadResponse.body),
   Extract({ path: process.env.VIBINGBASE_APP_DIR }),
 );
