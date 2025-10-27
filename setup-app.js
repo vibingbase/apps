@@ -23,7 +23,7 @@ switch (process.env.VIBINGBASE_APP_ENV) {
 }
 
 const prePublishResponse = await fetch(
-  `${process.env.VIBINGBASE_REQUEST_URL}/v1/app/${process.env.VIBINGBASE_APP_ID}/prepublish`,
+  `${process.env.VIBINGBASE_REQUEST_URL}/v1/app/${process.env.VIBINGBASE_APP_ID}/pre-publish`,
   {
     headers: requestHeaders,
     method: "POST",

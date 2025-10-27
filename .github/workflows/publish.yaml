@@ -94,7 +94,7 @@ jobs:
             **App ID**: `${{ inputs.vibingbase-app-id }}`
             **App Version**: `__VERSION__`
             **App Environment**: `${{ inputs.vibingbase-app-env }}`
-            (Built with [Vibingbase](https://www.vibingbase.com))
+            *Built with [Vibingbase](https://www.vibingbase.com) ✨*
           includeUpdaterJson: false
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
