@@ -95,7 +95,7 @@ jobs:
       - id: tauri
         uses: tauri-apps/tauri-action@v0
         with:
-          args: ${{ runner.os == 'macOS' && '--target universal-apple-darwin' || '' }} --config src-tauri/tauri.release.conf.json
+          args: ${{ runner.os == 'macOS' && '--target universal-apple-darwin' || '' }}
           tauriScript: pnpm exec tauri
           projectPath: ${{ runner.temp }}/${{ inputs.vibingbase-app-id }}
           tagName: ${{ inputs.vibingbase-app-env }}-${{ inputs.vibingbase-app-id }}@v__VERSION__
