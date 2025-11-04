@@ -3,6 +3,8 @@ import { execSync } from "node:child_process";
 import path from "node:path";
 import YAML from "yaml";
 
+console.log("Setting up development dependencies…");
+
 const pnpmWorkspaceFilePath = path.join(
   process.env.VIBINGBASE_APP_DIR,
   "pnpm-workspace.yaml",
@@ -12,22 +14,24 @@ const pnpmWorkspaceFileData = YAML.parse(
   readFileSync(pnpmWorkspaceFilePath, "utf8"),
 );
 
-const workspaceDir = path.join(process.env.VIBINGBASE_APP_DIR, ".workspace");
+const oldWorkspaceDir = path.join(process.env.VIBINGBASE_APP_DIR, ".workspace");
 
-if (existsSync(workspaceDir)) {
-  renameSync(workspaceDir, process.env.VIBINGBASE_WORKSPACE_DIR);
-  execSync("pnpm install", {
-    cwd: process.env.VIBINGBASE_WORKSPACE_DIR,
-    stdio: "inherit",
-  });
+const newWorkspaceDir = process.env.VIBINGBASE_WORKSPACE_DIR;
+
+if (existsSync(oldWorkspaceDir)) {
+  renameSync(oldWorkspaceDir, newWorkspaceDir);
+  execSync("pnpm install --prod", { cwd: newWorkspaceDir, stdio: "inherit" });
+  const prefix = `link:${path.join(newWorkspaceDir, "libs")}`;
   pnpmWorkspaceFileData.overrides = {
-    "@vibingbase/common-util": `link:${path.join(workspaceDir, "vibingbase-common-util")}`,
-    "@vibingbase/common-client": `link:${path.join(workspaceDir, "vibingbase-common-client")}`,
-    "@vibingbase/sdk": `link:${path.join(workspaceDir, "vibingbase-sdk")}`,
+    "@vibingbase/common-util": `${prefix}/vibingbase-common-util`,
+    "@vibingbase/common-client": `${prefix}/vibingbase-common-client`,
+    "@vibingbase/sdk": `${prefix}/vibingbase-sdk`,
   };
 } else {
   delete pnpmWorkspaceFileData.overrides;
 }
+
+console.log("Rewriting pnpm config files…");
 
 writeFileSync(pnpmWorkspaceFilePath, YAML.stringify(pnpmWorkspaceFileData));
 
