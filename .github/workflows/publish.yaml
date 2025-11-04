@@ -62,10 +62,11 @@ jobs:
           VIBINGBASE_APP_ENV: ${{ inputs.vibingbase-app-env }}
           VIBINGBASE_APP_DIR: ${{ runner.temp }}/${{ inputs.vibingbase-app-id }}
           VIBINGBASE_DOWNLOAD_URL: ${{ inputs.vibingbase-download-url }}
-      - run: node setup-workspace.js
+      - if: inputs.vibingbase-app-env == 'development'
+        run: node setup-workspace.js
         env:
-          VIBINGBASE_APP_ENV: ${{ inputs.vibingbase-app-env }}
           VIBINGBASE_APP_DIR: ${{ runner.temp }}/${{ inputs.vibingbase-app-id }}
+          VIBINGBASE_WORKSPACE_DIR: ${{ runner.temp }}/workspace
       - run: pnpm install
         working-directory: ${{ runner.temp }}/${{ inputs.vibingbase-app-id }}
       - uses: dtolnay/rust-toolchain@stable
