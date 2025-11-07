@@ -112,8 +112,8 @@ jobs:
             *Built with [Vibingbase](https://www.vibingbase.com) ✨*
           includeUpdaterJson: false
         env:
-          VITE_VIBINGBASE_ENV: ${{ inputs.vibingbase-app-env }}
-          VITE_VIBINGBASE_ID: ${{ inputs.vibingbase-app-id }}
+          VITE_VIBINGBASE_APP_ENV: ${{ inputs.vibingbase-app-env }}
+          VITE_VIBINGBASE_APP_ID: ${{ inputs.vibingbase-app-id }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
