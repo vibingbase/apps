@@ -103,8 +103,8 @@ jobs:
           args: ${{ runner.os == 'macOS' && '--target universal-apple-darwin' || '' }}
           tauriScript: pnpm exec tauri
           projectPath: ${{ runner.temp }}/${{ inputs.vibingbase-app-id }}
-          tagName: ${{ inputs.vibingbase-app-env }}-${{ inputs.vibingbase-app-id }}@v__VERSION__
-          releaseName: ${{ inputs.vibingbase-app-env }}-${{ inputs.vibingbase-app-id }}@v__VERSION__
+          tagName: ${{ inputs.vibingbase-app-env }}-${{ inputs.vibingbase-app-id }}@__VERSION__
+          releaseName: ${{ inputs.vibingbase-app-env }}-${{ inputs.vibingbase-app-id }}@__VERSION__
           releaseBody: |
             **App ID**: `${{ inputs.vibingbase-app-id }}`
             **App Version**: `__VERSION__`
