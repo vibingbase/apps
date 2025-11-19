@@ -69,6 +69,12 @@ jobs:
           VIBINGBASE_WORKSPACE_DIR: ${{ runner.temp }}/workspace
       - run: pnpm install
         working-directory: ${{ runner.temp }}/${{ inputs.vibingbase-app-id }}
+      - id: get-version-from-package-json
+        name: Get version from package.json
+        run: |
+          VERSION=$(jq -r '.version' package.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+        working-directory: ${{ runner.temp }}/${{ inputs.vibingbase-app-id }}
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ runner.os == 'macOS' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
@@ -114,6 +120,7 @@ jobs:
         env:
           VITE_VIBINGBASE_APP_ENV: ${{ inputs.vibingbase-app-env }}-release
           VITE_VIBINGBASE_APP_ID: ${{ inputs.vibingbase-app-id }}
+          VITE_VIBINGBASE_APP_VERSION: ${{ steps.get-version-from-package-json.outputs.version }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
