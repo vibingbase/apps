@@ -71,6 +71,7 @@ jobs:
         working-directory: ${{ runner.temp }}/${{ inputs.vibingbase-app-id }}
       - id: get-version-from-package-json
         name: Get version from package.json
+        shell: bash
         run: |
           VERSION=$(jq -r '.version' package.json)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
