@@ -21,12 +21,14 @@ const newWorkspaceDir = process.env.VIBINGBASE_WORKSPACE_DIR;
 if (existsSync(oldWorkspaceDir)) {
   renameSync(oldWorkspaceDir, newWorkspaceDir);
   execSync("pnpm install --prod", { cwd: newWorkspaceDir, stdio: "inherit" });
-  const prefix = `link:${path.join(newWorkspaceDir, "libs")}`;
-  pnpmWorkspaceFileData.overrides = {
-    "@vibingbase/common-util": `${prefix}/vibingbase-common-util`,
-    "@vibingbase/common-client": `${prefix}/vibingbase-common-client`,
-    "@vibingbase/sdk": `${prefix}/vibingbase-sdk`,
-  };
+  const oldPrefix = `link:/workspace/libs`;
+  const newPrefix = `link:${path.join(newWorkspaceDir, "libs")}`;
+  pnpmWorkspaceFileData.overrides = Object.fromEntries(
+    Object.entries(pnpmWorkspaceFileData.overrides).map(([key, value]) => [
+      key,
+      value.replace(oldPrefix, newPrefix),
+    ]),
+  );
 } else {
   delete pnpmWorkspaceFileData.overrides;
 }
