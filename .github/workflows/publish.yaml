@@ -119,6 +119,7 @@ jobs:
             *Built with [Vibingbase](https://www.vibingbase.com) ✨*
           includeUpdaterJson: false
         env:
+          VITE_VIBINGBASE_APP_TARGET: ${{ runner.os }}
           VITE_VIBINGBASE_APP_ENV: ${{ inputs.vibingbase-app-env }}-release
           VITE_VIBINGBASE_APP_ID: ${{ inputs.vibingbase-app-id }}
           VITE_VIBINGBASE_APP_VERSION: ${{ steps.get-version-from-package-json.outputs.version }}
