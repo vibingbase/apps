@@ -138,6 +138,7 @@ jobs:
       - shell: bash
         run: rm -rf ${{ runner.temp }}/${{ inputs.vibingbase-app-id }}/src-tauri/target${{ runner.os == 'macOS' && '/universal-apple-darwin/' || '/' }}release/bundle
   post-publish:
+    if: always()
     name: Post-publish ${{ inputs.vibingbase-app-env }}-${{ inputs.vibingbase-app-id }}
     runs-on: ubuntu-latest
     needs: [publish]
@@ -154,5 +155,6 @@ jobs:
           request-action: post-publish
           request-body: |
             {
-              "version": "${{ needs.publish.outputs.version }}"
+              "version": "${{ needs.publish.outputs.version }}",
+              "result": "${{ needs.publish.result }}"
             }
